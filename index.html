@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ElectionGuide — Interactive Election Process Assistant</title>
+  <meta name="description" content="ElectionGuide helps everyday citizens understand how democratic elections work through an interactive, AI-powered educational tool covering all 8 phases of the electoral process." />
+  <meta name="keywords" content="elections, democracy, voter registration, polling day, civic education, election guide" />
+  <meta name="author" content="ElectionGuide" />
+
+  <!-- Open Graph -->
+  <meta property="og:title"       content="ElectionGuide — Interactive Election Process Assistant" />
+  <meta property="og:description" content="Learn how democratic elections work with an AI-powered civic education tool." />
+  <meta property="og:type"        content="website" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+
+<!-- Screen Reader Label -->
+<h2 class="sr-only">ElectionGuide: Interactive Election Process Assistant</h2>
+
+<!-- Error Toast -->
+<div id="error-toast" class="error-toast" role="alert" aria-live="assertive">
+  <span>⚠️</span>
+  <span class="toast-text"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SETTINGS MODAL
+════════════════════════════════════════════ -->
+<div
+  id="settings-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="settings-modal-title"
+  onclick="handleModalBackdropClick(event)"
+>
+  <div class="modal-card">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <span class="modal-header-icon">🔑</span>
+      <div class="modal-header-text">
+        <h3 id="settings-modal-title">API Settings</h3>
+        <p>Free AI access via Groq</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeSettings()" aria-label="Close settings">✕</button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+
+      <!-- Current status -->
+      <div>
+        <div class="settings-input-label" style="margin-bottom:6px">Current status</div>
+        <span id="settings-status-chip" class="settings-status-chip demo">○ No key — running in demo mode</span>
+      </div>
+
+      <!-- API Key Input -->
+      <div class="settings-input-group">
+        <label class="settings-input-label" for="settings-key-input">OpenRouter API Key</label>
+        <div class="settings-input-row">
+          <div class="settings-key-input-wrap">
+            <span class="settings-key-input-icon">🔐</span>
+            <input
+              id="settings-key-input"
+              type="password"
+              placeholder="Paste your OpenRouter key (sk-or-…)"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="OpenRouter API key input"
+            />
+            <button
+              class="toggle-visibility-btn"
+              id="toggle-key-vis"
+              onclick="toggleKeyVisibility()"
+              aria-label="Toggle key visibility"
+              title="Show/hide key"
+            >👁️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="settings-actions">
+        <button class="btn-save-key" id="save-key-btn" onclick="handleSaveKey()">✓ Save API Key</button>
+        <button class="btn-clear-key" id="clear-key-btn" onclick="handleClearKey()">✕ Remove Key</button>
+      </div>
+
+      <!-- Help Note -->
+      <div class="settings-help-note">
+        <strong>🤖 Using Meta Llama 3.3 70B — completely free via Groq:</strong><br />
+        1. Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> and sign in<br />
+        2. Click <em>"Create API Key"</em><br />
+        3. Copy the key (starts with <code style="background:#eee;padding:1px 4px;border-radius:3px">gsk_</code>) and paste it above<br /><br />
+        ✅ <strong>Genuinely free</strong> — no credit card, no billing, ultra-fast inference.<br />
+        🔒 <strong>Privacy:</strong> Your key is saved only in your browser and sent only to Groq.
+      </div>
+
+    </div><!-- /modal-body -->
+  </div><!-- /modal-card -->
+</div><!-- /settings-modal -->
+
+<main class="app-wrapper">
+
+  <!-- ═══════════════════════════════════════════
+       APP HEADER
+  ══════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="app-header-logo" aria-hidden="true">🗳️</div>
+    <div class="app-header-text">
+      <h1>ElectionGuide</h1>
+      <p>Interactive Election Process Assistant</p>
+    </div>
+    <span id="api-status-badge" class="app-header-badge">⚡ Demo Mode</span>
+    <button
+      id="settings-open-btn"
+      class="settings-btn"
+      aria-label="Open API settings"
+      title="API Settings"
+      onclick="openSettings()"
+    >⚙️</button>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       INTERACTIVE TIMELINE
+  ══════════════════════════════════════════════ -->
+  <section class="timeline-section" aria-label="Election process timeline">
+    <p class="timeline-label">Election stages</p>
+
+    <div id="timeline-bar" class="timeline-bar" role="list" aria-label="8 election stages">
+      <!-- Rendered by timeline.js -->
+    </div>
+
+    <div class="progress-bar-row">
+      <div
+        id="main-progressbar"
+        class="progress-bar-track"
+        role="progressbar"
+        aria-label="Election stage progress"
+        aria-valuenow="1"
+        aria-valuemin="1"
+        aria-valuemax="8"
+      >
+        <div id="progress-fill" class="progress-bar-fill" style="width: 12.5%"></div>
+      </div>
+      <span id="progress-text-bar" class="progress-text">Stage 1 of 8</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       STAGE DETAIL CARD
+  ══════════════════════════════════════════════ -->
+  <section id="stage-card" class="stage-card" aria-label="Stage detail" aria-live="polite">
+    <!-- Rendered by chat.js → renderStageCard() -->
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       NAVIGATION CONTROLS
+  ══════════════════════════════════════════════ -->
+  <nav class="nav-controls" aria-label="Stage navigation">
+    <button
+      id="btn-prev"
+      class="btn btn-outline"
+      onclick="prevStage()"
+      disabled
+      aria-label="Go to previous election stage"
+    >
+      ← Previous
+    </button>
+
+    <button
+      id="btn-next"
+      class="btn btn-primary"
+      onclick="nextStage()"
+      aria-label="Go to next election stage"
+    >
+      Next Stage  →
+    </button>
+
+    <span id="stage-counter" class="stage-counter" aria-live="polite">Stage 1 of 8</span>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       AI CHAT PANEL
+  ══════════════════════════════════════════════ -->
+  <section class="chat-panel" aria-label="AI Election Assistant chat">
+
+    <!-- Header -->
+    <div class="chat-panel-header">
+      <div class="chat-avatar" aria-hidden="true">🗳️</div>
+      <div>
+        <p class="chat-panel-title">ElectionGuide Assistant</p>
+        <p class="chat-panel-subtitle">Powered by Llama 3.3 · Non-partisan</p>
+      </div>
+      <div class="chat-online-dot" title="Online" aria-label="Online"></div>
+    </div>
+
+    <!-- Messages -->
+    <div
+      id="chat-messages"
+      class="chat-messages"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation with ElectionGuide"
+    >
+      <!-- Messages rendered by chat.js -->
+    </div>
+
+    <!-- Typing indicator -->
+    <div id="typing-indicator" class="typing-indicator" aria-label="ElectionGuide is typing" aria-live="polite">
+      <div class="message-avatar msg-ai-avatar" aria-hidden="true">🗳️</div>
+      <div class="typing-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <span id="typing-label" class="typing-label">Thinking…</span>
+    </div>
+
+    <!-- Suggestion Chips -->
+    <div id="suggestions-area" class="suggestions-area" aria-label="Suggested questions">
+      <!-- Rendered by chat.js → updateSuggestions() -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ask anything about elections…"
+          aria-label="Ask a question about elections"
+          autocomplete="off"
+          maxlength="500"
+        />
+      </div>
+      <button
+        id="send-btn"
+        class="send-btn"
+        aria-label="Send message"
+        title="Send"
+      >
+        ➤
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════ -->
+  <footer style="text-align:center; font-size:11px; color: var(--color-text-secondary); padding-bottom: 0.5rem;">
+    ElectionGuide is an educational tool. Information is non-partisan and for civic learning purposes only.
+  </footer>
+
+</main>
+
+<!-- Scripts (order matters: stages → timeline → chat → api → init) -->
+<script src="scripts/stages.js"></script>
+<script src="scripts/timeline.js"></script>
+<script src="scripts/chat.js"></script>
+<script src="scripts/api.js"></script>
+<script>
+  // ── Settings Modal ───────────────────────────────────────────
+  function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('open');
+    const currentKey = getApiKey();
+    const input = document.getElementById('settings-key-input');
+    input.value = '';
+    input.type = 'password';
+    input.placeholder = currentKey
+      ? 'Key saved — paste a new key to replace'
+      : 'Paste your Groq key (gsk_…)';
+    document.getElementById('toggle-key-vis').textContent = '👁️';
+    updateApiKeyStatus();
+    setTimeout(() => input.focus(), 200);
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('open');
+  }
+
+  function handleModalBackdropClick(e) {
+    if (e.target === document.getElementById('settings-modal')) closeSettings();
+  }
+
+  function toggleKeyVisibility() {
+    const input = document.getElementById('settings-key-input');
+    const btn   = document.getElementById('toggle-key-vis');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  function handleSaveKey() {
+    const raw = document.getElementById('settings-key-input').value.trim();
+    if (!raw) {
+      showErrorToast('Please paste a valid API key before saving.');
+      return;
+    }
+    if (raw.includes('•')) {
+      showErrorToast('Please paste your actual key, not the masked display.');
+      return;
+    }
+    saveApiKey(raw);
+    showSuccessToast('✓ Groq API key saved! The assistant is now live.');
+    closeSettings();
+  }
+
+  function handleClearKey() {
+    clearApiKey();
+    const input = document.getElementById('settings-key-input');
+    input.value = '';
+    input.placeholder = 'Paste your Gemini API key…';
+    updateApiKeyStatus();
+    showSuccessToast('API key removed. Running in demo mode.');
+  }
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSettings();
+  });
+
+  // ── Success Toast (reusing error toast infrastructure) ───────
+  function showSuccessToast(message) {
+    const toast = document.getElementById('error-toast');
+    if (!toast) return;
+    toast.style.borderColor = '#34A853';
+    toast.style.color = '#1e6e32';
+    toast.querySelector('span').textContent = '✓';
+    toast.querySelector('.toast-text').textContent = message;
+    toast.classList.add('visible');
+    setTimeout(() => {
+      toast.classList.remove('visible');
+      // Reset error styling
+      setTimeout(() => {
+        toast.style.borderColor = '';
+        toast.style.color = '';
+        toast.querySelector('span').textContent = '⚠️';
+      }, 400);
+    }, 3500);
+  }
+
+  // ── Initialize App ───────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    renderTimeline();
+    renderStageCard();
+    updateNavControls();
+    updateProgressBar();
+    initChat();
+    updateApiKeyStatus(); // Reflect any previously saved key
+
+    // Recalculate progress line on window resize
+    window.addEventListener('resize', updateProgressLine);
+  });
+</script>
+
+</body>
+</html>
