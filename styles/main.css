@@ -152,6 +152,102 @@ input  { font-family: inherit; border: none; outline: none; }
   padding: 1.25rem 1.5rem 1rem;
 }
 
+/* ── Civic Info Section ────────────────────────────────────── */
+.civic-section {
+  background: var(--color-background-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--color-border-secondary);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+}
+.civic-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.civic-header p {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.civic-search {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.civic-search input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.civic-search input:focus {
+  border-color: var(--color-primary);
+}
+.civic-search button {
+  padding: 0 16px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.civic-search button:hover {
+  opacity: 0.9;
+}
+.civic-results {
+  margin-top: 16px;
+  max-height: 250px;
+  overflow-y: auto;
+  border-top: 1px solid var(--color-border-secondary);
+  padding-top: 12px;
+}
+.civic-placeholder {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  padding: 20px 0;
+}
+.civic-card {
+  padding: 12px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  background: var(--color-surface);
+}
+.civic-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.civic-card p.office {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+.civic-card p.party {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.civic-links a {
+  display: inline-block;
+  font-size: 11px;
+  margin-right: 8px;
+  margin-top: 6px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.civic-links a:hover {
+  text-decoration: underline;
+}
+
 .timeline-label {
   font-size: 11px;
   font-weight: 600;

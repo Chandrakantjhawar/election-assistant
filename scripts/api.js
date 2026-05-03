@@ -233,3 +233,71 @@ function getDemoResponse(question) {
 
   return `That's a thoughtful question! You're exploring the "${stage.label}" stage — ${stage.timing}.\n\n${stage.description.split('.').slice(0, 2).join('.')}.\n\nI'm currently in demo mode. To unlock full AI-powered answers using Llama 3.3 (free!), click ⚙️ Settings and paste a free Groq key from console.groq.com — no credit card needed.\n\nWhat else would you like to know about the electoral process?`;
 }
+
+// ── Google Civic Information API ──────────────────────────────
+
+async function searchCivic() {
+  const input = document.getElementById('civic-address-input');
+  const resultsDiv = document.getElementById('civic-results');
+  const address = input.value.trim();
+  const civicKey = localStorage.getItem('electionguide_civic_key');
+
+  if (!address) {
+    showErrorToast('Please enter an address or ZIP code.');
+    return;
+  }
+  if (!civicKey) {
+    showErrorToast('Please add a Google Civic API key in ⚙️ Settings first.');
+    return;
+  }
+
+  resultsDiv.innerHTML = '<p class="civic-placeholder">Searching...</p>';
+
+  try {
+    const url = `https://www.googleapis.com/civicinfo/v2/representatives?key=${civicKey}&address=${encodeURIComponent(address)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 403) throw new Error('Invalid Google Civic API Key or API not enabled.');
+      throw new Error(data.error?.message || 'Failed to fetch representatives.');
+    }
+
+    if (!data.officials || data.officials.length === 0) {
+      resultsDiv.innerHTML = '<p class="civic-placeholder">No representatives found for this address.</p>';
+      return;
+    }
+
+    let html = '';
+    
+    // Group officials by office
+    data.offices.forEach(office => {
+      office.officialIndices.forEach(index => {
+        const official = data.officials[index];
+        const party = official.party || 'Unknown Party';
+        const phones = official.phones ? official.phones.map(p => `<a href="tel:${p}">📞 ${p}</a>`).join('') : '';
+        const urls = official.urls ? official.urls.map(u => `<a href="${u}" target="_blank" rel="noopener">🌐 Website</a>`).join('') : '';
+        const channels = official.channels ? official.channels.map(c => `<a href="https://${c.type.toLowerCase()}.com/${c.id}" target="_blank" rel="noopener">@${c.id}</a>`).join('') : '';
+
+        html += `
+          <div class="civic-card">
+            <p class="office">${office.name}</p>
+            <h4>${official.name}</h4>
+            <p class="party">${party}</p>
+            <div class="civic-links">
+              ${phones}
+              ${urls}
+              ${channels}
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    resultsDiv.innerHTML = html;
+
+  } catch (err) {
+    console.error('[Civic API Error]', err);
+    resultsDiv.innerHTML = `<p class="civic-placeholder" style="color:var(--color-error)">Error: ${err.message}</p>`;
+  }
+}
