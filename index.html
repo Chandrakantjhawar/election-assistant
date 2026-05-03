@@ -106,12 +106,21 @@
 
       <!-- Help Note -->
       <div class="settings-help-note">
-        <strong>🤖 Using Meta Llama 3.3 70B — completely free via Groq:</strong><br />
-        1. Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> and sign in<br />
-        2. Click <em>"Create API Key"</em><br />
-        3. Copy the key (starts with <code style="background:#eee;padding:1px 4px;border-radius:3px">gsk_</code>) and paste it above<br /><br />
-        ✅ <strong>Genuinely free</strong> — no credit card, no billing, ultra-fast inference.<br />
-        🔒 <strong>Privacy:</strong> Your key is saved only in your browser and sent only to Groq.
+        <div style="margin-bottom: 12px;">
+          <strong>🤖 Groq API Key (AI Chat):</strong><br />
+          1. Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> and click <em>Create API Key</em><br />
+          2. Copy the key (starts with <code>gsk_</code>) and paste it above.
+        </div>
+        <div>
+          <strong>🏛️ Google Civic API Key (Find Reps):</strong><br />
+          1. Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> and create a New Project.<br />
+          2. Search for <em>"Google Civic Information API"</em> and enable it.<br />
+          3. Go to <em>APIs & Services > Credentials</em>, click <em>+ Create Credentials</em> > <em>API Key</em>.<br />
+          4. Copy the key (starts with <code>AIza</code>) and paste it above.
+        </div>
+        <div style="margin-top: 12px; font-size: 11px; opacity: 0.9;">
+          🔒 <strong>Privacy:</strong> Your keys are saved securely in your browser's local storage and never sent to a backend server.
+        </div>
       </div>
 
     </div><!-- /modal-body -->
