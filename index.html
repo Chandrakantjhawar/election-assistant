@@ -107,6 +107,64 @@
   </div><!-- /modal-card -->
 </div><!-- /settings-modal -->
 
+<!-- ═══════════════════════════════════════════
+     REGION MODAL
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="region-modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="region-modal-title">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <span class="modal-header-icon">🌍</span>
+      <div class="modal-header-text">
+        <h3 id="region-modal-title">Set Election Region</h3>
+        <p>Generate a custom guide for your location</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeRegionModal()" aria-label="Close region settings">✕</button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+
+      <!-- Loading Overlay inside Modal -->
+      <div id="region-loading-overlay" class="region-loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p style="margin-top: 16px; font-weight: 500;">Generating custom timeline...<br><span style="font-size:12px;opacity:0.8;font-weight:400">(This takes 5-10 seconds)</span></p>
+      </div>
+
+      <div class="settings-input-group">
+        <label class="settings-input-label" for="region-input">Country or State</label>
+        <div class="settings-input-row">
+          <div class="settings-key-input-wrap">
+            <span class="settings-key-input-icon">📍</span>
+            <input
+              id="region-input"
+              type="text"
+              placeholder="e.g. USA, India, California, UK..."
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Region input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <button class="btn-save-key" id="generate-region-btn" onclick="handleGenerateRegion()">✨ Generate Timeline</button>
+        <button class="btn-clear-key" id="reset-region-btn" onclick="handleResetRegion()">↺ Reset to Generic</button>
+      </div>
+
+      <div class="settings-help-note">
+        <strong>How this works:</strong><br />
+        Enter any location, and the AI will dynamically generate a custom 8-stage timeline specific to the election rules, timeline, and laws of that region. The chatbot will also update its knowledge base to match.
+        <br><br>
+        <em>Note: Requires a valid Groq API key saved in Settings.</em>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <main class="app-wrapper">
 
   <!-- ═══════════════════════════════════════════
@@ -118,6 +176,15 @@
       <h1>ElectionGuide</h1>
       <p>Interactive Election Process Assistant</p>
     </div>
+    
+    <button
+      id="region-open-btn"
+      class="region-btn"
+      aria-label="Set Election Region"
+      title="Set Region"
+      onclick="openRegionModal()"
+    >🌍 <span id="current-region-display">Generic</span></button>
+
     <span id="api-status-badge" class="app-header-badge">⚡ Demo Mode</span>
     <button
       id="settings-open-btn"
@@ -290,6 +357,64 @@
 
   function handleModalBackdropClick(e) {
     if (e.target === document.getElementById('settings-modal')) closeSettings();
+    if (e.target === document.getElementById('region-modal')) closeRegionModal();
+  }
+
+  // ── Region Modal ─────────────────────────────────────────────
+  function openRegionModal() {
+    document.getElementById('region-modal').classList.add('open');
+    setTimeout(() => document.getElementById('region-input').focus(), 200);
+  }
+
+  function closeRegionModal() {
+    document.getElementById('region-modal').classList.remove('open');
+  }
+
+  async function handleGenerateRegion() {
+    const input = document.getElementById('region-input').value.trim();
+    if (!input) {
+      showErrorToast('Please enter a location first.');
+      return;
+    }
+    if (!getApiKey()) {
+      showErrorToast('Please save a valid Groq API key in Settings first.');
+      return;
+    }
+    
+    document.getElementById('region-loading-overlay').style.display = 'flex';
+    
+    try {
+      const normalizedName = await generateRegionStages(input);
+      document.getElementById('current-region-display').textContent = normalizedName;
+      
+      // Re-render UI with new data
+      renderTimeline();
+      renderStageCard();
+      updateSuggestions();
+      
+      closeRegionModal();
+      showSuccessToast(`✓ Validated & Generated timeline for ${normalizedName}!`);
+    } catch (err) {
+      showErrorToast(err.message || 'Failed to generate timeline. Try again.');
+    } finally {
+      document.getElementById('region-loading-overlay').style.display = 'none';
+    }
+  }
+
+  function handleResetRegion() {
+    // defined in stages.js
+    STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
+    currentStageIndex = 0;
+    document.getElementById('current-region-display').textContent = 'Generic';
+    document.getElementById('region-input').value = '';
+    
+    // Re-render
+    renderTimeline();
+    renderStageCard();
+    updateSuggestions();
+    
+    closeRegionModal();
+    showSuccessToast('✓ Reset to generic election process.');
   }
 
   function toggleKeyVisibility() {

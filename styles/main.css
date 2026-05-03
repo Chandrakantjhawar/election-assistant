@@ -143,6 +143,27 @@ input  { font-family: inherit; border: none; outline: none; }
   white-space: nowrap;
 }
 
+.region-btn {
+  margin-left: 12px;
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.region-btn:hover {
+  background: var(--color-background-info);
+  border-color: #c5d9f9;
+}
+
 /* ── Timeline ──────────────────────────────────────────────── */
 .timeline-section {
   background: var(--color-background-primary);
@@ -874,6 +895,35 @@ input  { font-family: inherit; border: none; outline: none; }
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  position: relative;
+}
+
+/* Region Loading Overlay */
+.region-loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  backdrop-filter: blur(2px);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-background-info);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Status chip */

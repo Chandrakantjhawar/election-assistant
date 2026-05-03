@@ -3,7 +3,7 @@
  * Matches the schema defined in the tech spec (Section 4)
  */
 
-const STAGES = [
+const DEFAULT_STAGES = [
   {
     id: 1,
     slug: "announcement",
@@ -189,3 +189,5 @@ const STAGES = [
     ]
   }
 ];
+
+let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));

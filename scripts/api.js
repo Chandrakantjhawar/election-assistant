@@ -92,7 +92,14 @@ SAFETY: If a user expresses frustration with election results or democratic inst
 
 function buildSystemPrompt() {
   const stage = STAGES[currentStageIndex];
-  return `The user is currently viewing Stage ${stage.id}: ${stage.label} (${stage.timing}) in the interactive election guide. Tailor your response to this context when helpful, but prioritize answering their literal question.\n\n` + SYSTEM_PROMPT;
+  const region = document.getElementById('current-region-display')?.textContent || 'Generic';
+  
+  let context = `The user is currently viewing Stage ${stage.id}: ${stage.label} (${stage.timing}) in the interactive election guide.`;
+  if (region !== 'Generic') {
+    context += ` IMPORTANT: You must tailor your entire response to the specific election laws, timelines, and political processes of ${region}.`;
+  }
+  
+  return `${context} Tailor your response to this context when helpful, but prioritize answering their literal question.\n\n` + SYSTEM_PROMPT;
 }
 
 // ── OpenRouter API Call ───────────────────────────────────────
@@ -139,6 +146,96 @@ async function callAPIOnce(trimmedHistory, apiKey) {
   const text = data?.choices?.[0]?.message?.content?.trim();
   if (!text) throw Object.assign(new Error('empty'), { status: 0 });
   return text;
+}
+
+// ── Region Generation API Call ─────────────────────────────────
+
+/** Calls the API to generate a custom 8-stage timeline for a specific region */
+async function generateRegionStages(regionName) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('No API key saved.');
+
+  const prompt = `You are a strict, highly accurate civic education expert. The user has requested a custom 8-stage timeline of the election process specifically for: "${regionName}".
+
+FIRST, validate if "${regionName}" is a real-world country, state, or recognized geopolitical region that holds democratic elections. If it is fictional (e.g., "Narnia", "Gotham") or gibberish (e.g., "asdf"), you must reject it.
+
+You must return your answer ONLY as a raw JSON object. Do not include markdown blocks.
+
+JSON SCHEMA:
+{
+  "isValidRegion": true or false,
+  "normalizedName": "The proper name of the region if valid (e.g. 'United States' instead of 'usa')",
+  "errorMessage": "If isValidRegion is false, provide a short friendly error explaining why. Otherwise empty.",
+  "stages": [ // If valid, provide exactly 8 stage objects. If invalid, this can be empty.
+    {
+      "id": 1, 
+      "slug": "unique-string",
+      "label": "Name of the stage",
+      "emoji": "🇺🇸", 
+      "timing": "When it happens (e.g. 'November', '4 weeks before')",
+      "color": "#1A73E8", 
+      "description": "A 3-4 sentence highly accurate, factual explanation of this specific stage tailored perfectly to the laws of ${regionName}. Do NOT hallucinate.",
+      "keyPoints": [
+        { "label": "Key Fact 1", "value": "Specific detail" },
+        { "label": "Key Fact 2", "value": "Specific detail" },
+        { "label": "Key Fact 3", "value": "Specific detail" },
+        { "label": "Key Fact 4", "value": "Specific detail" }
+      ],
+      "callout": "💡 A fascinating, hyper-local, and factually verified fact about this stage in ${regionName}.",
+      "suggestedQuestions": [
+        "A relevant question 1?",
+        "A relevant question 2?",
+        "A relevant question 3?"
+      ]
+    }
+  ]
+}`;
+
+  const response = await fetch(OR_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: OR_MODEL,
+      response_format: { type: "json_object" },
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.message || response.statusText);
+  }
+
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  
+  if (!text) throw new Error('Empty response from AI');
+  
+  try {
+    const parsed = JSON.parse(text);
+    
+    // Validate region via AI
+    if (parsed.isValidRegion === false) {
+      throw new Error(parsed.errorMessage || 'Please enter a valid real-world country or region.');
+    }
+    
+    if (!parsed.stages || !Array.isArray(parsed.stages) || parsed.stages.length === 0) {
+      throw new Error('AI returned invalid JSON format.');
+    }
+    
+    // Globally update the stages array
+    STAGES = parsed.stages;
+    currentStageIndex = 0;
+    
+    return parsed.normalizedName || regionName;
+
+  } catch (err) {
+    console.error('JSON Parse Error:', text);
+    throw new Error(err.message || 'Failed to parse the custom timeline JSON.');
+  }
 }
 
 /**

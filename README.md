@@ -13,26 +13,32 @@ Instead of dropping users into an intimidating blank chat interface, the applica
 - **Stateful Context:** As the user navigates through the stages, the underlying UI state updates. 
 - **Context-Aware AI:** The AI (powered by Meta Llama 3.3 70B via Groq) is dynamically fed the user's current timeline stage via a system prompt. This ensures the AI's responses are contextually relevant to what the user is currently reading on the screen.
 - **Client-Side Architecture:** To ensure high portability and zero hosting costs, the entire application logic, state management, and API orchestration happen client-side using Vanilla JavaScript, HTML, and CSS.
+- **Dynamic Localization:** The app features a groundbreaking "Set Region" engine that uses AI to restructure the entire 8-stage timeline based on a specific country or state's actual laws and procedures.
 
 ## 3. How the Solution Works
 ### Architecture
 The app consists of four main modules:
-- `stages.js`: The data model. Contains the 8 predefined electoral stages, their descriptions, key data points, and context-specific suggested questions.
+- `stages.js`: The data model. Contains the default 8 electoral stages and manages the mutable state for AI-generated regional timelines.
 - `timeline.js`: The state machine. Handles UI navigation, progress bar updates, and rendering the dynamic stage detail cards.
-- `chat.js`: The messaging UI. Handles rendering user/AI message bubbles, managing the DOM scroll state, and displaying contextual suggestion chips.
-- `api.js`: The network layer. Manages the connection to the Groq API (Llama 3.3 70B). It handles `localStorage` key retrieval, conversation history truncation (to manage token limits), and implements a robust **exponential backoff (5s → 10s → 20s)** to gracefully handle rate limits.
+- `chat.js`: The messaging UI. Handles rendering user/AI message bubbles and contextual suggestion chips.
+- `api.js`: The network layer. Manages the connection to the Groq API. Includes specialized logic for **AI-driven JSON schema generation** and **geographic validation**.
+
+### Key Features
+1. **Global Adaptability:** Users can enter any region (e.g., "India", "California", "UK"). The app validates the region via AI and generates a custom, factually accurate 8-stage guide for that specific location.
+2. **AI Validation:** The system rejects fictional or invalid locations (e.g., "Narnia") to prevent hallucinations and maintain educational integrity.
+3. **Resilient API Handling:** Implements exponential backoff and client-side cooldowns to respect Groq's free-tier rate limits.
 
 ### User Flow
-1. **Onboarding:** The user is greeted with a "Demo Mode" fallback that provides pre-written educational responses.
-2. **API Configuration:** The user clicks the ⚙️ Settings gear and inputs a free Groq API key (saved securely to browser `localStorage`).
-3. **Exploration:** The user navigates the 8 timeline stages.
-4. **Interaction:** At any stage, the user can click a "Suggested Question" chip or type their own query. The AI responds contextually based on the active stage.
+1. **Onboarding:** The user starts with a "Generic" global election guide.
+2. **Personalization:** The user clicks the 🌍 Region button and enters their location.
+3. **AI Generation:** The app generates a custom timeline, updating descriptions, emojis, key facts, and suggested questions.
+4. **Interaction:** The user chats with the AI, which now has hyper-local context for that specific region's laws.
 
 ## 4. Assumptions Made
-1. **Generic Democratic Model:** Because electoral systems vary wildly across the globe (Parliamentary vs. Presidential, Proportional Representation vs. First-Past-The-Post), the 8 stages outlined in the app assume a generalized, international standard for democratic elections. The AI is instructed to note geographic variations when answering specific questions.
-2. **API Key Management:** It is assumed that the end-user can acquire a free Groq API key. To mitigate the UX friction of this assumption, detailed instructions are provided in the UI, and a pre-written "Demo Mode" ensures the app is not broken if a key is not provided.
-3. **Modern Browser Availability:** The application assumes the user is on a modern browser that supports ES6 features (Promises, async/await), CSS Variables, Flexbox, and standard `localStorage`.
-4. **Rate Limiting:** It is assumed the Groq free tier limit is 30 requests per minute. A client-side cooldown of 2.2 seconds between messages is enforced to prevent the user from accidentally triggering a 429 error under normal use.
+1. **Data Accuracy:** While the AI is instructed to be strictly factual and highly accurate, users are advised that the tool is for educational purposes and should be cross-referenced with official local election commission data.
+2. **API Key Management:** It is assumed that the end-user can acquire a free Groq API key for full functionality.
+3. **Modern Browser Availability:** Supports ES6+ features, CSS Variables, and `localStorage`.
+4. **8-Stage Schema:** The application assumes that any democratic process can be meaningfully summarized into 8 distinct logical phases for educational clarity.
 
 ---
 *Built with Vanilla HTML, CSS, and JavaScript. No external dependencies.*
