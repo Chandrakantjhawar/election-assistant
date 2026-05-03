@@ -62,65 +62,45 @@
         <span id="settings-status-chip" class="settings-status-chip demo">○ No key — running in demo mode</span>
       </div>
 
-      <!-- Groq API Key Input -->
+      <!-- API Key Input -->
       <div class="settings-input-group">
-        <label class="settings-input-label" for="settings-key-input">Groq API Key (AI Chat)</label>
+        <label class="settings-input-label" for="settings-key-input">OpenRouter API Key</label>
         <div class="settings-input-row">
           <div class="settings-key-input-wrap">
             <span class="settings-key-input-icon">🔐</span>
             <input
               id="settings-key-input"
               type="password"
-              placeholder="Paste your Groq key (gsk_…)"
+              placeholder="Paste your OpenRouter key (sk-or-…)"
               autocomplete="off"
               spellcheck="false"
+              aria-label="OpenRouter API key input"
             />
-            <button class="toggle-visibility-btn" id="toggle-key-vis" onclick="toggleKeyVisibility('settings-key-input', 'toggle-key-vis')">👁️</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Google Civic API Key Input -->
-      <div class="settings-input-group" style="margin-top: 16px;">
-        <label class="settings-input-label" for="settings-civic-key-input">Google Civic API Key (Find Reps)</label>
-        <div class="settings-input-row">
-          <div class="settings-key-input-wrap">
-            <span class="settings-key-input-icon">🏛️</span>
-            <input
-              id="settings-civic-key-input"
-              type="password"
-              placeholder="Paste your Google Cloud API key…"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button class="toggle-visibility-btn" id="toggle-civic-vis" onclick="toggleKeyVisibility('settings-civic-key-input', 'toggle-civic-vis')">👁️</button>
+            <button
+              class="toggle-visibility-btn"
+              id="toggle-key-vis"
+              onclick="toggleKeyVisibility()"
+              aria-label="Toggle key visibility"
+              title="Show/hide key"
+            >👁️</button>
           </div>
         </div>
       </div>
 
       <!-- Action Buttons -->
       <div class="settings-actions">
-        <button class="btn-save-key" id="save-key-btn" onclick="handleSaveKey()">✓ Save Keys</button>
-        <button class="btn-clear-key" id="clear-key-btn" onclick="handleClearKey()">✕ Remove Keys</button>
+        <button class="btn-save-key" id="save-key-btn" onclick="handleSaveKey()">✓ Save API Key</button>
+        <button class="btn-clear-key" id="clear-key-btn" onclick="handleClearKey()">✕ Remove Key</button>
       </div>
 
       <!-- Help Note -->
       <div class="settings-help-note">
-        <div style="margin-bottom: 12px;">
-          <strong>🤖 Groq API Key (AI Chat):</strong><br />
-          1. Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> and click <em>Create API Key</em><br />
-          2. Copy the key (starts with <code>gsk_</code>) and paste it above.
-        </div>
-        <div>
-          <strong>🏛️ Google Civic API Key (Find Reps):</strong><br />
-          1. Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> and create a New Project.<br />
-          2. Search for <em>"Google Civic Information API"</em> and enable it.<br />
-          3. Go to <em>APIs & Services > Credentials</em>, click <em>+ Create Credentials</em> > <em>API Key</em>.<br />
-          4. Copy the key (starts with <code>AIza</code>) and paste it above.
-        </div>
-        <div style="margin-top: 12px; font-size: 11px; opacity: 0.9;">
-          🔒 <strong>Privacy:</strong> Your keys are saved securely in your browser's local storage and never sent to a backend server.
-        </div>
+        <strong>🤖 Using Meta Llama 3.3 70B — completely free via Groq:</strong><br />
+        1. Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> and sign in<br />
+        2. Click <em>"Create API Key"</em><br />
+        3. Copy the key (starts with <code style="background:#eee;padding:1px 4px;border-radius:3px">gsk_</code>) and paste it above<br /><br />
+        ✅ <strong>Genuinely free</strong> — no credit card, no billing, ultra-fast inference.<br />
+        🔒 <strong>Privacy:</strong> Your key is saved only in your browser and sent only to Groq.
       </div>
 
     </div><!-- /modal-body -->
@@ -157,24 +137,6 @@
     <div id="timeline-bar" class="timeline-bar" role="list" aria-label="8 election stages">
       <!-- Rendered by timeline.js -->
     </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════════
-       GOOGLE CIVIC INFO WIDGET
-  ══════════════════════════════════════════════ -->
-  <section class="civic-section" aria-label="Find Your Representatives">
-    <div class="civic-header">
-      <h3>🏛️ Find Your Representatives</h3>
-      <p>Powered by Google Civic Information API (US Only)</p>
-    </div>
-    <div class="civic-search">
-      <input type="text" id="civic-address-input" placeholder="Enter your full address or ZIP code..." onkeypress="if(event.key==='Enter') searchCivic()">
-      <button onclick="searchCivic()">Search</button>
-    </div>
-    <div id="civic-results" class="civic-results">
-      <p class="civic-placeholder">Enter an address to see your local, state, and federal officials.</p>
-    </div>
-  </section>
 
     <div class="progress-bar-row">
       <div
@@ -190,6 +152,7 @@
       </div>
       <span id="progress-text-bar" class="progress-text">Stage 1 of 8</span>
     </div>
+  </section>
 
   <!-- ═══════════════════════════════════════════
        STAGE DETAIL CARD
@@ -310,20 +273,13 @@
     const modal = document.getElementById('settings-modal');
     modal.classList.add('open');
     const currentKey = getApiKey();
-    const currentCivicKey = localStorage.getItem('electionguide_civic_key') || '';
-    
     const input = document.getElementById('settings-key-input');
     input.value = '';
     input.type = 'password';
-    input.placeholder = currentKey ? 'Key saved — paste a new key to replace' : 'Paste your Groq key (gsk_…)';
+    input.placeholder = currentKey
+      ? 'Key saved — paste a new key to replace'
+      : 'Paste your Groq key (gsk_…)';
     document.getElementById('toggle-key-vis').textContent = '👁️';
-
-    const civicInput = document.getElementById('settings-civic-key-input');
-    civicInput.value = '';
-    civicInput.type = 'password';
-    civicInput.placeholder = currentCivicKey ? 'Key saved — paste a new key to replace' : 'Paste your Google Cloud API key…';
-    document.getElementById('toggle-civic-vis').textContent = '👁️';
-
     updateApiKeyStatus();
     setTimeout(() => input.focus(), 200);
   }
@@ -336,9 +292,9 @@
     if (e.target === document.getElementById('settings-modal')) closeSettings();
   }
 
-  function toggleKeyVisibility(inputId, btnId) {
-    const input = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
+  function toggleKeyVisibility() {
+    const input = document.getElementById('settings-key-input');
+    const btn   = document.getElementById('toggle-key-vis');
     if (input.type === 'password') {
       input.type = 'text';
       btn.textContent = '🙈';
@@ -349,35 +305,27 @@
   }
 
   function handleSaveKey() {
-    const rawGroq = document.getElementById('settings-key-input').value.trim();
-    const rawCivic = document.getElementById('settings-civic-key-input').value.trim();
-    
-    if (rawGroq && rawGroq.includes('•')) {
-      showErrorToast('Please paste your actual Groq key, not the masked display.');
+    const raw = document.getElementById('settings-key-input').value.trim();
+    if (!raw) {
+      showErrorToast('Please paste a valid API key before saving.');
       return;
     }
-    if (rawCivic && rawCivic.includes('•')) {
-      showErrorToast('Please paste your actual Google Civic key, not the masked display.');
+    if (raw.includes('•')) {
+      showErrorToast('Please paste your actual key, not the masked display.');
       return;
     }
-
-    if (rawGroq) saveApiKey(rawGroq);
-    if (rawCivic) localStorage.setItem('electionguide_civic_key', rawCivic);
-
-    if (rawGroq || rawCivic) {
-      showSuccessToast('✓ Settings saved successfully!');
-      closeSettings();
-    } else {
-      showErrorToast('Please paste at least one API key before saving.');
-    }
+    saveApiKey(raw);
+    showSuccessToast('✓ Groq API key saved! The assistant is now live.');
+    closeSettings();
   }
 
   function handleClearKey() {
     clearApiKey();
-    localStorage.removeItem('electionguide_civic_key');
-    document.getElementById('settings-key-input').value = '';
-    document.getElementById('settings-civic-key-input').value = '';
-    showSuccessToast('API keys removed.');
+    const input = document.getElementById('settings-key-input');
+    input.value = '';
+    input.placeholder = 'Paste your Gemini API key…';
+    updateApiKeyStatus();
+    showSuccessToast('API key removed. Running in demo mode.');
   }
 
   // Close modal on Escape key
