@@ -94,11 +94,32 @@ function appendMessage(role, text) {
   bubble.className = 'message-bubble';
   bubble.textContent = text;
 
+  // ── Google Search Verify Button (AI messages only) ──────────
+  if (role === 'assistant') {
+    // Grab the last user question to use as the search query
+    const lastUserMsg = [...conversationHistory]
+      .reverse()
+      .find(m => m.role === 'user');
+    const query = lastUserMsg?.content || text.slice(0, 80);
+
+    const verifyBtn = document.createElement('a');
+    verifyBtn.href   = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    verifyBtn.target = '_blank';
+    verifyBtn.rel    = 'noopener noreferrer';
+    verifyBtn.className   = 'verify-google-btn';
+    verifyBtn.textContent = '🔍 Verify on Google';
+    verifyBtn.title       = 'Search Google to verify this information';
+    verifyBtn.setAttribute('aria-label', `Search Google for: ${query}`);
+
+    bubble.appendChild(verifyBtn);
+  }
+
   row.appendChild(avatar);
   row.appendChild(bubble);
   messages.appendChild(row);
   scrollToBottom();
 }
+
 
 /** Scroll chat to the bottom */
 function scrollToBottom() {

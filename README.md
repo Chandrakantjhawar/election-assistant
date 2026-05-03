@@ -13,7 +13,8 @@ Instead of dropping users into an intimidating blank chat interface, the applica
 - **Stateful Context:** As the user navigates through the stages, the underlying UI state updates. 
 - **Context-Aware AI:** The AI (powered by Meta Llama 3.3 70B via Groq) is dynamically fed the user's current timeline stage via a system prompt. This ensures the AI's responses are contextually relevant to what the user is currently reading on the screen.
 - **Client-Side Architecture:** To ensure high portability and zero hosting costs, the entire application logic, state management, and API orchestration happen client-side using Vanilla JavaScript, HTML, and CSS.
-- **Dynamic Localization:** The app features a groundbreaking "Set Region" engine that uses AI to restructure the entire 8-stage timeline based on a specific country or state's actual laws and procedures.
+- **Dynamic Localization:** The app features a "Set Region" engine that uses AI to restructure the entire 8-stage timeline based on a specific country or state's actual laws and procedures.
+- **Google-Powered Fact Verification:** Every AI response includes a **"🔍 Verify on Google"** button that opens a pre-filled Google Search with the user's exact question — promoting responsible AI usage and digital literacy globally.
 
 ## 3. How the Solution Works
 ### Architecture
