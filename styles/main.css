@@ -143,35 +143,6 @@ input  { font-family: inherit; border: none; outline: none; }
   white-space: nowrap;
 }
 
-/* Google Translate specific styling to blend into header */
-.translate-widget {
-  margin-top: 4px;
-}
-.translate-widget select {
-  font-family: var(--font-primary);
-  font-size: 11px;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-secondary);
-  background-color: var(--color-surface);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-/* Hide the Google logo/banner from the translate widget */
-.goog-te-gadget {
-  font-size: 0px !important;
-  color: transparent !important;
-}
-.goog-te-gadget span {
-  display: none !important;
-}
-body {
-  top: 0 !important;
-}
-.skiptranslate iframe {
-  display: none !important;
-}
-
 /* ── Timeline ──────────────────────────────────────────────── */
 .timeline-section {
   background: var(--color-background-primary);
